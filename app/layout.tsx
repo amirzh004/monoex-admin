@@ -1,0 +1,42 @@
+import type React from "react"
+import type { Metadata } from "next"
+import { Space_Grotesk } from "next/font/google"
+import { DM_Sans } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import { Suspense } from "react"
+import "./globals.css"
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-space-grotesk",
+})
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-dm-sans",
+})
+
+export const metadata: Metadata = {
+  title: "MonoEX Consulting - Админ панель",
+  description: "Панель администратора для управления сайтом MonoEX Consulting",
+  icons: {
+    icon: "/logo-monoex.png",
+  },
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="ru">
+      <body className={`font-sans ${dmSans.variable} ${spaceGrotesk.variable}`}>
+        <Suspense fallback={null}>{children}</Suspense>
+        <Analytics />
+      </body>
+    </html>
+  )
+}
