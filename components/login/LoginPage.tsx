@@ -21,16 +21,16 @@ export function LoginPage() {
     setError("")
 
     try {
-      // Проверяем credentials через простой запрос к API
-      const response = await fetch('/api/proxy/legislations', {
+      const response = await fetch('/api/proxy/reviews/1', {
         method: 'GET',
         headers: {
           'Authorization': `Basic ${btoa(`${username}:${password}`)}`,
         },
       })
 
+      console.log(response, 'response')
+
       if (response.ok) {
-        // Сохраняем credentials в localStorage
         localStorage.setItem('authCredentials', JSON.stringify({ username, password }))
         router.push('/admin')
       } else {
