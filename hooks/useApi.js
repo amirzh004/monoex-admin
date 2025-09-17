@@ -54,12 +54,9 @@ export function useApi() {
     clearError: () => setError(null),
     legislation: {
       create: useCallback((formData) => makeRequest(legislationAPI.create, formData), [makeRequest]),
-      getAll: useCallback(async () => {
-        const data = await makeRequest(legislationAPI.getAll);
-        if (Array.isArray(data.data)) {
-          return data.data.map(item => new Legislation(item));
-        }
-        return [];
+      getAll: useCallback(async (params = {}) => {
+        const data = await makeRequest(legislationAPI.getAll, params);
+        return data;
       }, [makeRequest]),
       getById: useCallback(async (id) => {
         const data = await makeRequest(legislationAPI.getById, id);
@@ -70,13 +67,9 @@ export function useApi() {
     },
     news: {
     create: useCallback((data) => makeRequest(newsAPI.create, data), [makeRequest]),
-    getAll: useCallback(async () => {
-      const response = await makeRequest(newsAPI.getAll);
-      const data = response.data; // извлекаем массив из поля data
-      if (Array.isArray(data)) {
-        return data.map(item => new News(item));
-      }
-      return [];
+    getAll: useCallback(async (params = {}) => {
+      const response = await makeRequest(newsAPI.getAll, params);
+      return response;
     }, [makeRequest]),
     getById: useCallback(async (id) => {
       const data = await makeRequest(newsAPI.getById, id);
@@ -93,15 +86,11 @@ export function useApi() {
     uploadImage: useCallback((file) => makeRequest(newsAPI.uploadImage, file), [makeRequest]),
   },
     review: {
-      create: useCallback((data) => makeRequest(reviewAPI.create, data), [makeRequest]),
-      getAll: useCallback(async () => {
-        const response = await makeRequest(reviewAPI.getAll);
-        const data = response.data; // извлекаем массив из поля data
-        if (Array.isArray(data)) {
-          return data.map(item => new Review(item));
-        }
-        return [];
-      }, [makeRequest]),
+    create: useCallback((data) => makeRequest(reviewAPI.create, data), [makeRequest]),
+    getAll: useCallback(async (params = {}) => {
+      const response = await makeRequest(reviewAPI.getAll, params);
+      return response;
+    }, [makeRequest]),
       getById: useCallback(async (id) => {
         const data = await makeRequest(reviewAPI.getById, id);
         return transformReviewData(data);

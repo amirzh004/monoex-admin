@@ -1,3 +1,4 @@
+// LawsSection.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -40,28 +41,39 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileText, Plus, Edit, Trash2, Download } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Download, Eye } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
 import { Legislation } from "@/models";
 
 export function LawsSection() {
   const [isAddingLaw, setIsAddingLaw] = useState(false);
   const [editingLaw, setEditingLaw] = useState<Legislation | null>(null);
+  const [viewingLaw, setViewingLaw] = useState<Legislation | null>(null);
   const [laws, setLaws] = useState<Legislation[]>([]);
   const [newLaw, setNewLaw] = useState(new Legislation());
   const [file, setFile] = useState<File | null>(null);
   const { legislation, loading, error, clearError } = useApi();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Загрузка данных при монтировании компонента
+  // Добавляем эффект для перезагрузки данных при изменении страницы
   useEffect(() => {
     loadLaws();
-  }, []);
+  }, [currentPage]);
 
-  const loadLaws = async () => {
+  // Изменяем функцию loadLaws для поддержки пагинации
+  const loadLaws = async (page = currentPage, limit = itemsPerPage) => {
     try {
-      const data = await legislation.getAll();
-      console.log("data", data);
-      setLaws(Array.isArray(data) ? data : []);
+      const response = await legislation.getAll({ 
+        limit, 
+        offset: (page - 1) * limit 
+      });
+      
+      if (response && response.data) {
+        setLaws(Array.isArray(response.data) ? response.data : []);
+        setTotalItems(response.total || 0);
+      }
     } catch (err) {
       console.error("Ошибка при загрузке законодательных актов:", err);
       setLaws([]);
@@ -131,8 +143,6 @@ export function LawsSection() {
     }
   };
 
-  console.log("laws:", laws);
-
   // Ensure laws is always an array before mapping
   const lawsArray = Array.isArray(laws) ? laws : [];
 
@@ -165,7 +175,7 @@ export function LawsSection() {
         >
           <DialogTrigger asChild>
             <Button
-              className="w-full sm:w-auto text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+              className="w-full cursor-pointer sm:w-auto text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
               style={{
                 backgroundColor: "#2c3e50",
                 fontFamily: "DM Sans, sans-serif",
@@ -311,6 +321,42 @@ export function LawsSection() {
         </DialogContent>
       </Dialog>
 
+      {/* View Law Dialog */}
+      <Dialog open={!!viewingLaw} onOpenChange={() => setViewingLaw(null)}>
+        <DialogContent className="sm:max-w-[700px] mx-4 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{viewingLaw?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Описание:</h4>
+                <p className="text-muted-foreground">{viewingLaw?.description}</p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Документ:</h4>
+                {viewingLaw?.file_path && (
+                  <a
+                    href={viewingLaw.file_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {viewingLaw.file_path.split('/').pop()}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingLaw(null)}>
+              Закрыть
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card className="bg-white shadow-sm border border-gray-200 rounded-lg">
         <CardHeader className="border-b border-gray-100">
           <CardTitle
@@ -350,8 +396,8 @@ export function LawsSection() {
                   <TableRow key={law.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{law.title}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="font-medium truncate max-w-[200px]">{law.title}</div>
+                        <div className="text-sm text-muted-foreground truncate max-w-[200px]">
                           {law.description}
                         </div>
                       </div>
@@ -359,7 +405,7 @@ export function LawsSection() {
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm truncate">
+                        <span className="text-sm truncate max-w-[150px]">
                           {law.file_path?.split("/").pop()}
                         </span>
                       </div>
@@ -372,6 +418,16 @@ export function LawsSection() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => setViewingLaw(law)}
+                          title="Просмотреть"
+                          className="cursor-pointer"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="cursor-pointer"
                           onClick={() => {
                             const link = document.createElement("a");
                             link.href = law.file_path;
@@ -386,6 +442,7 @@ export function LawsSection() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="cursor-pointer"
                           onClick={() => setEditingLaw(law)}
                           title="Редактировать"
                         >
@@ -393,7 +450,7 @@ export function LawsSection() {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" title="Удалить">
+                            <Button variant="ghost" className="cursor-pointer" size="sm" title="Удалить">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
@@ -434,6 +491,41 @@ export function LawsSection() {
             <div className="text-center py-8">Загрузка данных...</div>
           )}
         </CardContent>
+           {/* Пагинация */}
+        {totalItems > itemsPerPage && (
+          <div className="flex justify-center mt-6 pb-6">
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+              >
+                Назад
+              </Button>
+              
+              {Array.from(
+                { length: Math.ceil(totalItems / itemsPerPage) },
+                (_, i) => i + 1
+              ).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+              
+              <Button
+                variant="outline"
+                disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Вперед
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

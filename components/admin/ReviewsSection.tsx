@@ -1,3 +1,4 @@
+// ReviewsSection.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -28,13 +29,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { FileText, Plus, Edit, Trash2, Download } from "lucide-react"
+import { FileText, Plus, Edit, Trash2, Download, Eye } from "lucide-react"
 import { useApi } from "@/hooks/useApi"
 import { Review } from "@/models"
 
 export function ReviewsSection() {
   const [isAddingReview, setIsAddingReview] = useState(false)
   const [editingReview, setEditingReview] = useState<Review | null>(null)
+  const [viewingReview, setViewingReview] = useState<Review | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [newReview, setNewReview] = useState({
     company_name: "",
@@ -43,16 +45,26 @@ export function ReviewsSection() {
   })
   const [file, setFile] = useState<File | null>(null)
   const { review: reviewApi, loading, error, clearError } = useApi()
-
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
+  
   // Загрузка данных при монтировании компонента
   useEffect(() => {
     loadReviews()
-  }, [])
+  }, [currentPage]) // Добавляем currentPage в зависимости
 
-  const loadReviews = async () => {
+  const loadReviews = async (page = currentPage, limit = itemsPerPage) => {
     try {
-      const data = await reviewApi.getAll()
-      setReviews(data)
+      const response = await reviewApi.getAll({ 
+        limit, 
+        offset: (page - 1) * limit 
+      })
+      
+      if (response && response.data) {
+        setReviews(Array.isArray(response.data) ? response.data : [])
+        setTotalItems(response.total || 0)
+      }
     } catch (err) {
       console.error('Ошибка при загрузке отзывов:', err)
       setReviews([])
@@ -143,7 +155,7 @@ export function ReviewsSection() {
         <Dialog open={isAddingReview} onOpenChange={setIsAddingReview}>
           <DialogTrigger asChild>
             <Button
-              className="w-full sm:w-auto text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+              className="w-full sm:w-auto cursor-pointer text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
               style={{
                 backgroundColor: "#2c3e50",
                 fontFamily: "DM Sans, sans-serif",
@@ -296,6 +308,45 @@ export function ReviewsSection() {
         </DialogContent>
       </Dialog>
 
+      {/* View Review Dialog */}
+      <Dialog open={!!viewingReview} onOpenChange={() => setViewingReview(null)}>
+        <DialogContent className="sm:max-w-[700px] mx-4 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{viewingReview?.company_name}</DialogTitle>
+            <DialogDescription>
+              Тип услуги: {viewingReview?.service_type}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Описание:</h4>
+                <p className="text-muted-foreground">{viewingReview?.description}</p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Документ:</h4>
+                {viewingReview?.pdf_path && (
+                  <a
+                    href={viewingReview.pdf_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {viewingReview.pdf_path.split('/').pop()}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingReview(null)}>
+              Закрыть
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card className="bg-white shadow-sm border border-gray-200 rounded-lg">
         <CardHeader className="border-b border-gray-100">
           <CardTitle style={{ color: "#2c3e50", fontFamily: "Space Grotesk, sans-serif" }}>Список отзывов</CardTitle>
@@ -325,17 +376,17 @@ export function ReviewsSection() {
                   <TableRow key={review.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{review.company_name}</div>
+                        <div className="font-medium truncate max-w-[200px]">{review.company_name}</div>
                         <div className="text-sm text-muted-foreground truncate max-w-[200px]">{review.description}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{review.service_type}</Badge>
+                      <Badge variant="outline" className="truncate max-w-[150px]">{review.service_type}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm truncate">{review.pdf_path?.split('/').pop()}</span>
+                        <span className="text-sm truncate max-w-[150px]">{review.pdf_path?.split('/').pop()}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -346,6 +397,16 @@ export function ReviewsSection() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="cursor-pointer"
+                          onClick={() => setViewingReview(review)}
+                          title="Просмотреть"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="cursor-pointer"
                           onClick={() => {
                             // Download functionality
                             const link = document.createElement("a")
@@ -360,6 +421,7 @@ export function ReviewsSection() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="cursor-pointer"
                           onClick={() => setEditingReview(review)}
                           title="Редактировать"
                         >
@@ -367,7 +429,7 @@ export function ReviewsSection() {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" title="Удалить">
+                            <Button variant="ghost" size="sm" className="cursor-pointer" title="Удалить">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
@@ -408,6 +470,43 @@ export function ReviewsSection() {
               </div>
             )}
           </CardContent>
+
+              {/* Пагинация для отзывов */}
+        {totalItems > itemsPerPage && (
+          <div className="flex justify-center mt-6 pb-6">
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+              >
+                Назад
+              </Button>
+              
+              {Array.from(
+                { length: Math.ceil(totalItems / itemsPerPage) },
+                (_, i) => i + 1
+              ).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+              
+              <Button
+                variant="outline"
+                disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Вперед
+              </Button>
+            </div>
+          </div>
+        )}
+
         </Card>
       </div>
     )

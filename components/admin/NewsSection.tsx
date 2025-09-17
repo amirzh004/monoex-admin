@@ -45,21 +45,31 @@ export function NewsSection() {
   })
   const [image, setImage] = useState<File | null>(null)
   const { news: newsApi, loading, error, clearError } = useApi()
-
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
+  
   // Загрузка данных при монтировании компонента
   useEffect(() => {
     loadNews()
-  }, [])
+  }, [currentPage]) // Добавляем currentPage в зависимости
 
-  const loadNews = async () => {
+  const loadNews = async (page = currentPage, limit = itemsPerPage) => {
     try {
-      const data = await newsApi.getAll();
-      setNews(Array.isArray(data) ? data : []);
+      const response = await newsApi.getAll({ 
+        limit, 
+        offset: (page - 1) * limit 
+      })
+      
+      if (response && response.data) {
+        setNews(Array.isArray(response.data) ? response.data : [])
+        setTotalItems(response.total || 0)
+      }
     } catch (err) {
-      console.error('Ошибка при загрузке новостей:', err);
-      setNews([]);
+      console.error('Ошибка при загрузке новостей:', err)
+      setNews([])
     }
-  };
+  }
 
   const handleCreateNews = async (status: string) => {
     clearError()
@@ -179,7 +189,7 @@ export function NewsSection() {
         <Dialog open={isAddingNews} onOpenChange={setIsAddingNews}>
           <DialogTrigger asChild>
             <Button
-              className="w-full sm:w-auto text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+              className="w-full sm:w-auto cursor-pointer text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
               style={{
                 backgroundColor: "#2c3e50",
                 fontFamily: "DM Sans, sans-serif",
@@ -440,9 +450,9 @@ export function NewsSection() {
                           alt={article.title}
                           className="w-12 h-12 rounded object-cover flex-shrink-0"
                         />
-                        <div className="min-w-0">
-                          <div className="font-medium truncate">{article.title}</div>
-                          <div className="text-sm text-muted-foreground truncate">{article.description}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium truncate max-w-[200px]">{article.title}</div>
+                          <div className="text-sm text-muted-foreground truncate max-w-[200px]">{article.description}</div>
                         </div>
                       </div>
                     </TableCell>
@@ -454,18 +464,13 @@ export function NewsSection() {
                     <TableCell>{new Date(article.created_at).toLocaleDateString('ru-RU')}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-1">
-                        <Button variant="ghost" size="sm" onClick={() => setViewingNews(article)} title="Просмотреть">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setEditingNews(article)} title="Редактировать">
-                          <Edit className="h-4 w-4" />
-                        </Button>
                         {article.status === 'published' ? (
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             onClick={() => handleUnpublishNews(article.id)} 
                             title="Снять с публикации"
+                            className="truncate max-w-[80px] border cursor-pointer"
                           >
                             Снять
                           </Button>
@@ -475,13 +480,20 @@ export function NewsSection() {
                             size="sm" 
                             onClick={() => handlePublishNews(article.id)} 
                             title="Опубликовать"
+                            className="truncate max-w-[100px] border cursor-pointer"
                           >
                             Опубликовать
                           </Button>
                         )}
+                        <Button variant="ghost" size="sm" className="cursor-pointer" onClick={() => setViewingNews(article)} title="Просмотреть">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="cursor-pointer" onClick={() => setEditingNews(article)} title="Редактировать">
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" title="Удалить">
+                            <Button variant="ghost" size="sm" className="cursor-pointer" title="Удалить">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
@@ -521,6 +533,43 @@ export function NewsSection() {
             </div>
           )}
         </CardContent>
+
+          {/* Пагинация для новостей */}
+        {totalItems > itemsPerPage && (
+          <div className="flex justify-center mt-6 pb-6">
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+              >
+                Назад
+              </Button>
+              
+              {Array.from(
+                { length: Math.ceil(totalItems / itemsPerPage) },
+                (_, i) => i + 1
+              ).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+              
+              <Button
+                variant="outline"
+                disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Вперед
+              </Button>
+            </div>
+          </div>
+        )}
+
       </Card>
     </div>
   )
