@@ -29,7 +29,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { FileText, Plus, Edit, Trash2, Download, Eye } from "lucide-react"
+import { FileText, Plus, Edit, Trash2, Download, Eye, RefreshCw } from "lucide-react"
 import { useApi } from "@/hooks/useApi"
 import { Review } from "@/models"
 
@@ -142,29 +142,36 @@ export function ReviewsSection() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2
-            className="text-2xl md:text-3xl font-bold"
-            style={{ color: "#2c3e50", fontFamily: "Space Grotesk, sans-serif" }}
-          >
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ color: "#2c3e50", fontFamily: "Space Grotesk, sans-serif" }}>
             Отзывы клиентов
           </h2>
           <p className="text-gray-600" style={{ fontFamily: "DM Sans, sans-serif" }}>
             Управление отзывами и рекомендациями от клиентов
           </p>
         </div>
-        <Dialog open={isAddingReview} onOpenChange={setIsAddingReview}>
-          <DialogTrigger asChild>
-            <Button
-              className="w-full sm:w-auto cursor-pointer text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
-              style={{
-                backgroundColor: "#2c3e50",
-                fontFamily: "DM Sans, sans-serif",
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить отзыв
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button
+            onClick={loadReviews}
+            variant="outline"
+            className="cursor-pointer"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Обновить
+          </Button>
+          <Dialog open={isAddingReview} onOpenChange={setIsAddingReview}>
+            <DialogTrigger asChild>
+              <Button
+                className="cursor-pointer text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                style={{
+                  backgroundColor: "#2c3e50",
+                  fontFamily: "DM Sans, sans-serif",
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Добавить отзыв
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[525px] mx-4 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Добавить новый отзыв</DialogTitle>
@@ -229,8 +236,9 @@ export function ReviewsSection() {
               </DialogFooter>
             </div>
           </DialogContent>
-        </Dialog>
+            </Dialog>
       </div>
+    </div>
 
       {/* Edit Review Dialog */}
       <Dialog open={!!editingReview} onOpenChange={() => setEditingReview(null)}>
