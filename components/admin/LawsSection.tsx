@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileText, Plus, Edit, Trash2, Download, Eye } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Download, Eye, RefreshCw } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
 import { Legislation } from "@/models";
 
@@ -150,41 +150,36 @@ export function LawsSection() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2
-            className="text-2xl md:text-3xl font-bold"
-            style={{
-              color: "#2c3e50",
-              fontFamily: "Space Grotesk, sans-serif",
-            }}
-          >
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ color: "#2c3e50", fontFamily: "Space Grotesk, sans-serif" }}>
             Законодательство
           </h2>
-          <p
-            className="text-gray-600"
-            style={{ fontFamily: "DM Sans, sans-serif" }}
-          >
+          <p className="text-gray-600" style={{ fontFamily: "DM Sans, sans-serif" }}>
             Управление юридическими документами и законодательными актами
           </p>
         </div>
-        <Dialog
-          open={isAddingLaw}
-          onOpenChange={(open) => {
-            setIsAddingLaw(open);
-            if (open) clearError();
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button
-              className="w-full cursor-pointer sm:w-auto text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
-              style={{
-                backgroundColor: "#2c3e50",
-                fontFamily: "DM Sans, sans-serif",
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить документ
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button
+            onClick={loadLaws}
+            variant="outline"
+            className="cursor-pointer"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Обновить
+          </Button>
+          <Dialog open={isAddingLaw} onOpenChange={setIsAddingLaw}>
+            <DialogTrigger asChild>
+              <Button
+                className="cursor-pointer text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                style={{
+                  backgroundColor: "#2c3e50",
+                  fontFamily: "DM Sans, sans-serif",
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Добавить документ
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[525px] mx-4 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Добавить новый документ</DialogTitle>
@@ -247,6 +242,7 @@ export function LawsSection() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
 
       {/* Edit Law Dialog */}
       <Dialog

@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Plus, Edit, Trash2, Eye } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, RefreshCw } from "lucide-react"
 import { useApi } from "@/hooks/useApi"
 import { News } from "@/models"
 
@@ -176,29 +176,36 @@ export function NewsSection() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2
-            className="text-2xl md:text-3xl font-bold"
-            style={{ color: "#2c3e50", fontFamily: "Space Grotesk, sans-serif" }}
-          >
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ color: "#2c3e50", fontFamily: "Space Grotesk, sans-serif" }}>
             Новости
           </h2>
           <p className="text-gray-600" style={{ fontFamily: "DM Sans, sans-serif" }}>
             Управление новостными статьями и публикациями
           </p>
         </div>
-        <Dialog open={isAddingNews} onOpenChange={setIsAddingNews}>
-          <DialogTrigger asChild>
-            <Button
-              className="w-full sm:w-auto cursor-pointer text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
-              style={{
-                backgroundColor: "#2c3e50",
-                fontFamily: "DM Sans, sans-serif",
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить новость
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button
+            onClick={loadNews}
+            variant="outline"
+            className="cursor-pointer"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Обновить
+          </Button>
+          <Dialog open={isAddingNews} onOpenChange={setIsAddingNews}>
+            <DialogTrigger asChild>
+              <Button
+                className="cursor-pointer text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                style={{
+                  backgroundColor: "#2c3e50",
+                  fontFamily: "DM Sans, sans-serif",
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Добавить новость
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[625px] mx-4 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Добавить новую статью</DialogTitle>
@@ -276,6 +283,7 @@ export function NewsSection() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
 
       {/* Edit News Dialog */}
       <Dialog open={!!editingNews} onOpenChange={() => setEditingNews(null)}>
