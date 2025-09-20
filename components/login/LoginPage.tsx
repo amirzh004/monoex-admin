@@ -16,7 +16,7 @@ export function LoginPage() {
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault()    
     setLoading(true)
     setError("")
 
@@ -32,7 +32,7 @@ export function LoginPage() {
 
       if (response.ok) {
         localStorage.setItem('authCredentials', JSON.stringify({ username, password }))
-        router.push('/admin')
+        router.push('/') // Изменено с '/admin' на '/'
       } else {
         setError("Неверное имя пользователя или пароль")
       }

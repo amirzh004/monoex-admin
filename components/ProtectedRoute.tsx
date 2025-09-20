@@ -31,7 +31,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage />
+    router.push('/login')
+    return null
   }
 
   return <>{children}</>

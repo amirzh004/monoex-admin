@@ -20,7 +20,6 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "MonoEX Consulting - Админ панель",
-  description: "Панель администратора для управления сайтом MonoEX Consulting",
   icons: {
     icon: "/logo-monoex.png",
   },
@@ -32,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru">
+    <html>
       <body className={`font-sans ${dmSans.variable} ${spaceGrotesk.variable}`}>
         <Suspense fallback={null}>{children}</Suspense>
         <Analytics />

@@ -7,7 +7,7 @@ export function AdminHeader() {
 
   const handleLogout = () => {
     localStorage.removeItem('authCredentials')
-    router.push('/admin/login')
+    router.push('/login')
   }
 
   return (
