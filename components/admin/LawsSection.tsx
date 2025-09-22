@@ -44,6 +44,7 @@ import {
 import { FileText, Plus, Edit, Trash2, Download, Eye, RefreshCw } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
 import { Legislation } from "@/models";
+import API_BASE_URL from "@/lib/api";
 
 export function LawsSection() {
   const [isAddingLaw, setIsAddingLaw] = useState(false);
@@ -426,7 +427,7 @@ export function LawsSection() {
                           className="cursor-pointer"
                           onClick={() => {
                             const link = document.createElement("a");
-                            link.href = law.file_path;
+                            link.href = `${API_BASE_URL}/${law.file_path}`;
                             link.download =
                               law.file_path.split("/").pop() || "document.pdf";
                             link.click();
