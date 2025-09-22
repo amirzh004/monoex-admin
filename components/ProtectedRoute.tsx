@@ -9,7 +9,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    // Проверяем, есть ли сохраненные credentials
+    
     const checkAuth = () => {
       try {
         const savedCredentials = localStorage.getItem('authCredentials')
