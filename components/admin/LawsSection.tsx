@@ -57,6 +57,10 @@ export function LawsSection() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
 
+  const API_BASE_URL = process.env.NODE_ENV === 'production' 
+    ? 'https://api.monoexconsulting.kz' 
+    : '/api/proxy';
+
   // Добавляем эффект для перезагрузки данных при изменении страницы
   useEffect(() => {
     loadLaws();
@@ -77,6 +81,69 @@ export function LawsSection() {
     } catch (err) {
       console.error("Ошибка при загрузке законодательных актов:", err);
       setLaws([]);
+    }
+  };
+
+  // Функция для скачивания файла
+  const handleDownload = async (law: Legislation) => {
+    try {
+      if (!law.file_path) {
+        console.error("Путь к файлу не указан");
+        return;
+      }
+
+      // Создаем полный URL к файлу
+      let fileUrl = law.file_path;
+      
+      // Если путь относительный, добавляем базовый URL
+      if (!law.file_path.startsWith('http')) {
+        fileUrl = `${API_BASE_URL}${law.file_path.startsWith('/') ? '' : '/'}${law.file_path}`;
+      }
+
+      // Получаем credentials из localStorage
+      const getAuthCredentials = () => {
+        try {
+          const savedCredentials = localStorage.getItem('authCredentials');
+          if (savedCredentials) {
+            return JSON.parse(savedCredentials);
+          }
+        } catch (err) {
+          console.error('Error reading auth credentials from localStorage:', err);
+        }
+        return { username: 'admin', password: 'password' }; // fallback
+      };
+
+      const credentials = getAuthCredentials();
+      const authHeader = `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`;
+
+      // Загружаем файл через fetch с авторизацией
+      const response = await fetch(fileUrl, {
+        headers: {
+          'Authorization': authHeader,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Ошибка загрузки: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Создаем временную ссылку для скачивания
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = law.file_path?.split('/').pop() || 'document.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Освобождаем память
+      URL.revokeObjectURL(blobUrl);
+      
+    } catch (error) {
+      console.error('Ошибка при скачивании файла:', error);
+      alert('Не удалось скачать файл. Проверьте консоль для подробностей.');
     }
   };
 
@@ -180,69 +247,69 @@ export function LawsSection() {
                 Добавить документ
               </Button>
             </DialogTrigger>
-          <DialogContent className="sm:max-w-[525px] mx-4 max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Добавить новый документ</DialogTitle>
-              <DialogDescription>
-                Заполните информацию о новом законодательном документе
-              </DialogDescription>
-            </DialogHeader>
-            {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error}
-              </div>
-            )}
-            <form onSubmit={handleCreateLaw}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Заголовок</Label>
-                  <Input
-                    id="title"
-                    placeholder="Название документа"
-                    value={newLaw.title}
-                    onChange={(e) =>
-                      setNewLaw({ ...newLaw, title: e.target.value })
-                    }
-                    required
-                  />
+            <DialogContent className="sm:max-w-[525px] mx-4 max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Добавить новый документ</DialogTitle>
+                <DialogDescription>
+                  Заполните информацию о новом законодательном документе
+                </DialogDescription>
+              </DialogHeader>
+              {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {error}
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Описание</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Краткое описание документа"
-                    value={newLaw.description}
-                    onChange={(e) =>
-                      setNewLaw({ ...newLaw, description: e.target.value })
-                    }
-                    required
-                  />
+              )}
+              <form onSubmit={handleCreateLaw}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Заголовок</Label>
+                    <Input
+                      id="title"
+                      placeholder="Название документа"
+                      value={newLaw.title}
+                      onChange={(e) =>
+                        setNewLaw({ ...newLaw, title: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Описание</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Краткое описание документа"
+                      value={newLaw.description}
+                      onChange={(e) =>
+                        setNewLaw({ ...newLaw, description: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="file">Файл документа</Label>
+                    <Input
+                      id="file"
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileChange}
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="file">Файл документа</Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileChange}
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  className="w-full sm:w-auto"
-                  disabled={loading}
-                >
-                  {loading ? "Сохранение..." : "Сохранить документ"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    className="w-full sm:w-auto"
+                    disabled={loading}
+                  >
+                    {loading ? "Сохранение..." : "Сохранить документ"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-    </div>
 
       {/* Edit Law Dialog */}
       <Dialog
@@ -424,13 +491,7 @@ export function LawsSection() {
                           variant="ghost"
                           size="sm"
                           className="cursor-pointer"
-                          onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = law.file_path;
-                            link.download =
-                              law.file_path.split("/").pop() || "document.pdf";
-                            link.click();
-                          }}
+                          onClick={() => handleDownload(law)}
                           title="Скачать документ"
                         >
                           <Download className="h-4 w-4" />
@@ -487,7 +548,7 @@ export function LawsSection() {
             <div className="text-center py-8">Загрузка данных...</div>
           )}
         </CardContent>
-           {/* Пагинация */}
+        {/* Пагинация */}
         {totalItems > itemsPerPage && (
           <div className="flex justify-center mt-6 pb-6">
             <div className="flex space-x-2">
