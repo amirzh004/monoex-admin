@@ -44,6 +44,7 @@ import {
 import { FileText, Plus, Edit, Trash2, Download, Eye, RefreshCw } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
 import { Legislation } from "@/models";
+import API_BASE_URL from "@/lib/api";
 
 export function LawsSection() {
   const [isAddingLaw, setIsAddingLaw] = useState(false);

@@ -32,6 +32,7 @@ import {
 import { FileText, Plus, Edit, Trash2, Download, Eye, RefreshCw } from "lucide-react"
 import { useApi } from "@/hooks/useApi"
 import { Review } from "@/models"
+import API_BASE_URL from "@/lib/api";
 
 export function ReviewsSection() {
   const [isAddingReview, setIsAddingReview] = useState(false)
@@ -335,7 +336,7 @@ export function ReviewsSection() {
                 <h4 className="font-medium mb-2">Документ:</h4>
                 {viewingReview?.pdf_path && (
                   <a
-                    href={viewingReview.pdf_path}
+                    href={`${API_BASE_URL}/${viewingReview.pdf_path}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline flex items-center"
@@ -418,7 +419,7 @@ export function ReviewsSection() {
                           onClick={() => {
                             // Download functionality
                             const link = document.createElement("a")
-                            link.href = review.pdf_path
+                            link.href = `${API_BASE_URL}/${review.pdf_path}`
                             link.download = review.pdf_path.split('/').pop() || 'review.pdf'
                             link.click()
                           }}

@@ -31,6 +31,7 @@ import {
 import { Plus, Edit, Trash2, Eye, RefreshCw } from "lucide-react"
 import { useApi } from "@/hooks/useApi"
 import { News } from "@/models"
+import API_BASE_URL from "@/lib/api";
 
 export function NewsSection() {
   const [isAddingNews, setIsAddingNews] = useState(false)
@@ -336,7 +337,7 @@ export function NewsSection() {
                   {editingNews.image_path && (
                     <div className="flex items-center space-x-2 mt-2">
                       <img
-                        src={editingNews.image_path || "/placeholder.svg"}
+                        src={`${API_BASE_URL}/${editingNews.image_path}` || "/placeholder.svg"}
                         alt="Текущее изображение"
                         className="w-16 h-16 rounded object-cover"
                       />
@@ -393,7 +394,7 @@ export function NewsSection() {
           <div className="py-4">
             {viewingNews?.image_path && (
               <img
-                src={viewingNews.image_path || "/placeholder.svg"}
+                src={`${API_BASE_URL}/${viewingNews.image_path}` || "/placeholder.svg"}
                 alt={viewingNews.title}
                 className="w-full h-48 rounded-lg object-cover mb-4"
               />
@@ -454,7 +455,7 @@ export function NewsSection() {
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <img
-                          src={article.image_path || "/placeholder.svg"}
+                          src={`${API_BASE_URL}/${article.image_path}` || "/placeholder.svg"}
                           alt={article.title}
                           className="w-12 h-12 rounded object-cover flex-shrink-0"
                         />
