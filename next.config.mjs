@@ -15,7 +15,7 @@ const nextConfig = {
     return [
       {
         // Разрешаем запросы ко всем API routes
-        source: '/api/:path*',
+        source: '/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
@@ -30,7 +30,7 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/proxy/:path*',
+        source: '/proxy/:path*',
         destination: 'https://api.monoexconsulting.kz/:path*',
       },
     ];

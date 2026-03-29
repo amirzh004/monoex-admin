@@ -72,42 +72,25 @@ export function NewsSection() {
     }
   }
 
-  const handleCreateNews = async (status: string) => {
-    clearError()
-    
-    try {
-      // Генерируем уникальную ссылку из заголовка
-      const link = newNews.title
-        .toLowerCase()
-        .replace(/[^a-z0-9а-яё\s]/gi, '')
-        .replace(/\s+/g, '_')
-      
-      // Создаем FormData для отправки
-      const formData = new FormData()
-      formData.append('title', newNews.title)
-      formData.append('description', newNews.description)
-      formData.append('full_text', newNews.full_text)
-      formData.append('link', link)
-      formData.append('status', status)
-      
-      if (image) {
-        formData.append('image', image)
-      }
-      
-      await newsApi.create(formData)
-      setIsAddingNews(false)
-      setNewNews({
-        title: "",
-        description: "",
-        full_text: "",
-        status: "not_published"
-      })
-      setImage(null)
-      loadNews()
-    } catch (err) {
-      console.error('Ошибка при создании новости:', err)
-    }
-  }
+    const handleCreateNews = async (status: string) => {
+        clearError();
+        if (!image) return;
+        try {
+            await newsApi.create({
+                title: newNews.title,
+                description: newNews.description,
+                full_text: newNews.full_text,
+                status,
+                imageFile: image, // передаём File-объект
+            });
+            setIsAddingNews(false);
+            setNewNews({ title: '', description: '', full_text: '', status: 'not_published' });
+            setImage(null);
+            loadNews();
+        } catch (err) {
+            console.error('Ошибка при создании новости:', err);
+        }
+    };
 
   const handleUpdateNews = async () => {
     clearError()

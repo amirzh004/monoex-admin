@@ -72,33 +72,24 @@ export function ReviewsSection() {
     }
   }
 
-  const handleCreateReview = async () => {
-    clearError()
-    
-    try {
-      // Создаем FormData для отправки
-      const formData = new FormData()
-      formData.append('company_name', newReview.company_name)
-      formData.append('service_type', newReview.service_type)
-      formData.append('description', newReview.description)
-      
-      if (file) {
-        formData.append('file', file)
-      }
-      
-      await reviewApi.create(formData)
-      setIsAddingReview(false)
-      setNewReview({
-        company_name: "",
-        service_type: "",
-        description: ""
-      })
-      setFile(null)
-      loadReviews()
-    } catch (err) {
-      console.error('Ошибка при создании отзыва:', err)
-    }
-  }
+    const handleCreateReview = async () => {
+        clearError();
+        if (!file) return;
+        try {
+            await reviewApi.create({
+                company_name: newReview.company_name,
+                service_type: newReview.service_type,
+                description: newReview.description,
+                file, // передаём File-объект
+            });
+            setIsAddingReview(false);
+            setNewReview({ company_name: '', service_type: '', description: '' });
+            setFile(null);
+            loadReviews();
+        } catch (err) {
+            console.error('Ошибка при создании отзыва:', err);
+        }
+    };
 
   const handleUpdateReview = async () => {
     clearError()

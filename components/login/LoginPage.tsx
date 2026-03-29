@@ -21,12 +21,12 @@ export function LoginPage() {
     setError("")
 
     try {
-      const response = await fetch('/api/proxy/legislations/protected', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Basic ${btoa(`${username}:${password}`)}`,
-        },
-      })
+        const response = await fetch('/proxy/legislations', {  // ← changed
+            method: 'GET',
+            headers: {
+                'Authorization': `Basic ${btoa(`${username}:${password}`)}`,
+            },
+        })
 
       console.log(response, 'response')
 

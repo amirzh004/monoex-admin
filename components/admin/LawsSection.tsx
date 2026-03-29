@@ -59,8 +59,8 @@ export function LawsSection() {
   const [totalItems, setTotalItems] = useState(0);
 
   const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://api.monoexconsulting.kz' 
-    : '/api/proxy';
+    ? 'https://api.monoexconsulting.kz'
+    : '/proxy';
 
   // Добавляем эффект для перезагрузки данных при изменении страницы
   useEffect(() => {
@@ -148,29 +148,24 @@ export function LawsSection() {
     }
   };
 
-  const handleCreateLaw = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
-
-    try {
-      // Создаем FormData
-      const formData = new FormData();
-      formData.append("title", newLaw.title);
-      formData.append("description", newLaw.description);
-
-      if (file) {
-        formData.append("file", file);
-      }
-
-      await legislation.create(formData);
-      setIsAddingLaw(false);
-      setNewLaw(new Legislation());
-      setFile(null);
-      loadLaws();
-    } catch (err) {
-      console.error("Ошибка при создании законодательного акта:", err);
-    }
-  };
+    const handleCreateLaw = async (e: React.FormEvent) => {
+        e.preventDefault();
+        clearError();
+        if (!file) return;
+        try {
+            await legislation.create({
+                title: newLaw.title,
+                description: newLaw.description,
+                file, // передаём File-объект, не FormData
+            });
+            setIsAddingLaw(false);
+            setNewLaw(new Legislation());
+            setFile(null);
+            loadLaws();
+        } catch (err) {
+            console.error('Ошибка при создании законодательного акта:', err);
+        }
+    };
 
   const handleUpdateLaw = async (e: React.FormEvent) => {
     e.preventDefault();
